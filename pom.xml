@@ -2,10 +2,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ru.itx</groupId>
-	<artifactId>service</artifactId>
+	<artifactId>ccm</artifactId>
 	<packaging>jar</packaging>
 	<version>0.1</version>
-	<name>service</name>
+	<name>Call Center Manager</name>
 	<url>http://www.itx.ru</url>
 	<developers>
 		<developer>
@@ -17,8 +17,8 @@
 	</developers>
 	<licenses>
 		<license>
-			<name>Apache 2</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<name>GPL v3</name>
+			<url>http://www.gnu.org/licenses/gpl.txt</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
