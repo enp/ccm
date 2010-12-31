@@ -25,16 +25,16 @@
 	</tx:advice>
 
 	<aop:config>
-		<aop:pointcut id="tx" expression="execution(* ru.itx.beans.*Manager.*(..))"/>
+		<aop:pointcut id="tx" expression="execution(* ru.itx.ccm.beans.*Manager.*(..))"/>
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="tx"/>
 	</aop:config>
 
 	<context:annotation-config/>
 
-	<bean id="bookManager" class="ru.itx.beans.BookManager"/>
+	<bean id="eventManager" class="ru.itx.ccm.beans.EventManager"/>
 
-	<bean id="bean" class="ru.itx.beans.Bean" init-method="init" destroy-method="destroy">
-		<property name="bookManager" ref="bookManager"/>
+	<bean id="bean" class="ru.itx.ccm.beans.EventListener" init-method="init" destroy-method="destroy">
+		<property name="eventManager" ref="eventManager"/>
 	</bean>
 
 </beans>

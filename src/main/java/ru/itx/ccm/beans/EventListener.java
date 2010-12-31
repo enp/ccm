@@ -13,33 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package ru.itx.beans;
+package ru.itx.ccm.beans;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-public class BookManager {
+public class EventListener {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
+	private EventManager eventManager;
 
-	@PersistenceContext
-    private EntityManager em;
-
-    public List<Book> getBooks() {
-		return (List<Book>)em.createQuery("select b from Book b").getResultList();
+	public void setEventManager(EventManager eventManager) {
+		this.eventManager = eventManager;
 	}
-	
-	public Book createBook(String name, String author, Date date) {
-        Book book = new Book(name, author, date);
-		em.persist(book);
-        return book;
-    }
 
+	public void init() {
+		logger.debug("init");
+		eventManager.connectSession("1", "2", "3", "4");
+	}
+
+	public void destroy() {
+		eventManager.disconnectSession("1");
+		logger.debug("destroy");
+	}
 }
