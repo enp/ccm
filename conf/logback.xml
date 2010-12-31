@@ -25,6 +25,7 @@
 
 	<logger name="ru.itx" level="DEBUG"/>
 	<logger name="org.hibernate.tool" level="DEBUG"/>
+	<logger name="org.freeswitch.esl.client.inbound.InboundClientHandler" level="OFF"/>
 
 	<root level="INFO">
 		<appender-ref ref="file"/>

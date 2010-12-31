@@ -33,6 +33,7 @@ public class EventListener {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private EventManager eventManager;
 	private Client client = new Client();
+	private List<String> users = new ArrayList<String>();
 
 	private String host;
 	private int port;
@@ -67,17 +68,39 @@ public class EventListener {
 							headers.get("from-user"),
 							headers.get("user-agent"),
 							headers.get("network-ip"));
+						client.sendAsyncApiCommand("sofia", "xmlstatus profile stc");
 					} else if (subclass.equals("sofia::unregister")) {
 						eventManager.disconnectSession(headers.get("call-id"));
+						client.sendAsyncApiCommand("sofia", "xmlstatus profile stc");
 					}
 				}
 			}
 			public void backgroundJobResultReceived(EslEvent event) {
-
+				String eventBody = "";
+				for (String eventBodyLine : event.getEventBodyLines())
+					eventBody += eventBodyLine;
+				try {
+					Document document = DocumentHelper.parseText(eventBody);
+					String command =
+						event.getEventHeaders().get("Job-Command")+" "+
+						event.getEventHeaders().get("Job-Command-Arg");
+					if (command.equals("sofia xmlstatus profile stc"))
+						processPresence(document);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		});
 		client.connect(host, port, password, 2);
+		client.sendAsyncApiCommand("sofia", "xmlstatus profile stc");
 		client.setEventSubscriptions("plain", "all");
+	}
+
+	private void processPresence(Document document) {
+		users.clear();
+		for(Node node : (List<Node>)document.selectNodes("/profile/registrations/registration/user"))
+			users.add(node.getText());
+		logger.debug("users [{}]",users);
 	}
 
 	public void destroy() {
