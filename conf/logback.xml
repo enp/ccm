@@ -24,7 +24,7 @@
 	</appender>
 
 	<logger name="ru.itx" level="DEBUG"/>
-	<logger name="org.springframework" level="INFO"/>
+	<logger name="org.hibernate.tool" level="DEBUG"/>
 
 	<root level="INFO">
 		<appender-ref ref="file"/>

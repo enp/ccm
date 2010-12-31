@@ -35,6 +35,9 @@
 
 	<bean id="bean" class="ru.itx.ccm.beans.EventListener" init-method="init" destroy-method="destroy">
 		<property name="eventManager" ref="eventManager"/>
+		<property name="host" value="pbx"/>
+		<property name="port" value="8021"/>
+		<property name="password" value="ClueCon"/>
 	</bean>
 
 </beans>
