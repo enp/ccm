@@ -16,6 +16,8 @@
 
 package ru.itx.ccm.beans;
 
+import ru.itx.ccm.model.Call;
+import ru.itx.ccm.model.Counter;
 import ru.itx.ccm.model.Session;
 
 import javax.persistence.EntityManager;
@@ -43,4 +45,40 @@ public class EventManager {
 		}
 	}
 
+	public void connectCall(String systemId, String source, String destination, String fifoName) {
+		Call call = new Call(systemId, source, destination, fifoName);
+		em.persist(call);
+	}
+
+	private List<Call> getCalls(String systemId) {
+		return (List<Call>)em.createQuery("select c from Call c where systemId = :systemId")
+			.setParameter("systemId", systemId)
+			.getResultList();
+	}
+
+	public void answerCall(String systemId, final String userName) {
+		for (Call call : getCalls(systemId)) {
+			call.answer(userName);
+			em.persist(call);
+		}
+	}
+
+	public void hangupCall(String systemId) {
+		for (Call call : getCalls(systemId)) {
+			call.hangup();
+			em.persist(call);
+		}
+	}
+
+	public void abortCall(String systemId) {
+		for (Call call : getCalls(systemId)) {
+			call.abort();
+			em.persist(call);
+		}
+	}
+
+	public void count(String fifo, int members, int activeMembers, int callers, int bridges) {
+		Counter counter = new Counter(fifo, members, activeMembers, callers, bridges);
+		em.persist(counter);
+	}
 }

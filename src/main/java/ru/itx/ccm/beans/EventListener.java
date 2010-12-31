@@ -18,6 +18,8 @@ package ru.itx.ccm.beans;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Node;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import org.freeswitch.esl.client.IEslEventListener;
 import org.freeswitch.esl.client.inbound.Client;
 import org.freeswitch.esl.client.transport.event.EslEvent;
@@ -38,6 +40,7 @@ public class EventListener {
 	private String host;
 	private int port;
 	private String password;
+	private String domain;
 
 	public void setHost(String host) {
 		this.host = host;
@@ -49,6 +52,10 @@ public class EventListener {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public void setDomain(String domain) {
+		this.domain = domain;
 	}
 
 	public void setEventManager(EventManager eventManager) {
@@ -72,6 +79,27 @@ public class EventListener {
 					} else if (subclass.equals("sofia::unregister")) {
 						eventManager.disconnectSession(headers.get("call-id"));
 						client.sendAsyncApiCommand("sofia", "xmlstatus profile stc");
+					}else if (subclass.contains("fifo::")) {
+						String action = event.getEventHeaders().get("FIFO-Action");
+						if (action.equals("push")) {
+							eventManager.connectCall(
+								headers.get("Unique-ID"),
+								headers.get("Caller-Caller-ID-Number"),
+								headers.get("Caller-RDNIS"),
+								headers.get("FIFO-Name"));
+							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+						} else if (action.equals("bridge-caller-start")) {
+							eventManager.answerCall(
+								headers.get("Unique-ID"),
+								headers.get("Other-Leg-Callee-ID-Name"));
+							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+						} else if (action.equals("bridge-caller-stop")) {
+							eventManager.hangupCall(headers.get("Unique-ID"));
+							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+						}else if (action.equals("abort")) {
+							eventManager.abortCall(headers.get("Unique-ID"));
+							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+						}
 					}
 				}
 			}
@@ -86,6 +114,8 @@ public class EventListener {
 						event.getEventHeaders().get("Job-Command-Arg");
 					if (command.equals("sofia xmlstatus profile stc"))
 						processPresence(document);
+					if (command.startsWith("fifo list_verbose"))
+						processFifo(document);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -100,7 +130,20 @@ public class EventListener {
 		users.clear();
 		for(Node node : (List<Node>)document.selectNodes("/profile/registrations/registration/user"))
 			users.add(node.getText());
-		logger.debug("users [{}]",users);
+	}
+
+	private void processFifo(Document document) {
+		String fifo = document.selectSingleNode("/fifo_report/fifo").valueOf("@name");
+		List<Node> members = document.selectNodes("/fifo_report/fifo/outbound/member");
+		List<String> activeMembers = new ArrayList<String>();
+		for (Node node : members) {
+			String user = node.getText().replace("user/","");
+			if (users.contains(user))
+				activeMembers.add(user.replace("@"+domain,""));
+		}
+		List<Node> callers = document.selectNodes("/fifo_report/fifo/callers/caller");
+		List<Node> bridges = document.selectNodes("/fifo_report/fifo/bridges/bridge");
+		eventManager.count(fifo, members.size(), activeMembers.size(), callers.size(), bridges.size());
 	}
 
 	public void destroy() {
