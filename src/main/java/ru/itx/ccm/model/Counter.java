@@ -32,8 +32,8 @@ public class Counter implements Serializable {
 	@Column(name="count_time")
 	private Date countTime;
 
-	@Column(name="fifo",length=5)
-	private String fifo;
+	@Column(name="fifo_name",length=10)
+	private String fifoName;
 
 	@Column(name="members")
 	private int members;
@@ -49,8 +49,8 @@ public class Counter implements Serializable {
 
 	public Counter() {}
 
-	public Counter(String fifo, int members, int activeMembers, int callers, int bridges) {
-		this.fifo = fifo;
+	public Counter(String fifoName, int members, int activeMembers, int callers, int bridges) {
+		this.fifoName = fifoName;
 		this.members = members;
 		this.activeMembers = activeMembers;
 		this.callers = callers;
@@ -59,7 +59,7 @@ public class Counter implements Serializable {
 	}
 
 	public String toString() {
-		return "Counter { "+id+" : "+fifo+" : "+" : "+members+" : "+activeMembers+" : "+callers+" : "+bridges+" }";
+		return "Counter { "+id+" : "+ fifoName +" : "+" : "+members+" : "+activeMembers+" : "+callers+" : "+bridges+" }";
 	}
 
 }
