@@ -16,9 +16,14 @@
 
 package ru.itx.ccm.model;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name="calls")
@@ -59,6 +64,10 @@ public class Call implements Serializable {
 	@Column(name="abort_time")
 	private Date abortTime;
 
+	@OneToMany(mappedBy="call",cascade=CascadeType.ALL)
+	@OnDelete(action=OnDeleteAction.CASCADE)
+	List<CallFail> fails = new ArrayList<CallFail>();
+
 	public Call() {}
 
 	public Call(String systemId, String source, String destination, String fifoName) {
@@ -84,8 +93,11 @@ public class Call implements Serializable {
 		this.abortTime = new Date();
 	}
 
+	public void fail(String userName, String reason) {
+		fails.add(new CallFail(this, userName, reason));
+	}
+
 	public String toString() {
 		return "Call { "+id+" : "+ systemId +" : "+ userName +" }";
 	}
-
 }

@@ -16,6 +16,8 @@
 
 package ru.itx.ccm.beans;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.itx.ccm.model.Call;
 import ru.itx.ccm.model.Counter;
 import ru.itx.ccm.model.Session;
@@ -76,6 +78,13 @@ public class EventManager {
 			em.persist(call);
 		}
 	}
+
+	public void failCall(String systemId, String userName, String reason) {
+		for (Call call : getCalls(systemId)) {
+				call.fail(userName, reason);
+				em.persist(call);
+			}
+		}
 
 	public void count(String fifo, int members, int activeMembers, int callers, int bridges) {
 		Counter counter = new Counter(fifo, members, activeMembers, callers, bridges);

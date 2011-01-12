@@ -6,6 +6,7 @@
 		<provider>org.hibernate.ejb.HibernatePersistence</provider>
 		<class>ru.itx.ccm.model.Session</class>
 		<class>ru.itx.ccm.model.Call</class>
+		<class>ru.itx.ccm.model.CallFail</class>
 		<class>ru.itx.ccm.model.Counter</class>
 		<properties>
 			<property name="hibernate.connection.driver_class" value="org.apache.derby.jdbc.EmbeddedDriver"/>

@@ -96,9 +96,14 @@ public class EventListener {
 						} else if (action.equals("bridge-caller-stop")) {
 							eventManager.hangupCall(headers.get("Unique-ID"));
 							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
-						}else if (action.equals("abort")) {
+						} else if (action.equals("abort")) {
 							eventManager.abortCall(headers.get("Unique-ID"));
 							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+						} else if (action.equals("post-dial") && !headers.get("result").equals("success")) {
+							eventManager.failCall(
+								headers.get("caller-uuid"),
+								headers.get("originate_string").split("/")[1].split("@")[0],
+								headers.get("cause"));
 						}
 					}
 				}
