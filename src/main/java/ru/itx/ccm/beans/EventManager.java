@@ -28,12 +28,15 @@ import java.util.List;
 
 public class EventManager {
 
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
 	@PersistenceContext
 	private EntityManager em;
 
 	public void connectSession(String systemId, String userName, String userAgent, String host) {
 		Session session = new Session(systemId, userName, userAgent, host);
 		em.persist(session);
+		logger.debug("session connect: {}, {}, {}", new Object[] {userName, userAgent, host});
 	}
 
 	public void disconnectSession(String systemId) {
@@ -44,12 +47,14 @@ public class EventManager {
 		for (Session session : sessions) {
 			session.disconnect();
 			em.persist(session);
+			logger.debug("session disconnect: {}", session.getUserName());
 		}
 	}
 
 	public void connectCall(String systemId, String source, String destination, String fifoName) {
 		Call call = new Call(systemId, source, destination, fifoName);
 		em.persist(call);
+		logger.debug("call connect: {}->{}", new Object[] {source, destination});
 	}
 
 	private List<Call> getCalls(String systemId) {
@@ -62,6 +67,7 @@ public class EventManager {
 		for (Call call : getCalls(systemId)) {
 			call.answer(userName);
 			em.persist(call);
+			logger.debug("call aswer: {}->{}->{}", new Object[] {call.getSource(), call.getDestination(), userName});
 		}
 	}
 
@@ -69,6 +75,7 @@ public class EventManager {
 		for (Call call : getCalls(systemId)) {
 			call.hangup();
 			em.persist(call);
+			logger.debug("call hangup: {}->{}", new Object[] {call.getSource(), call.getDestination()});
 		}
 	}
 
@@ -76,6 +83,7 @@ public class EventManager {
 		for (Call call : getCalls(systemId)) {
 			call.abort();
 			em.persist(call);
+			logger.debug("call abort: {}->{}", new Object[] {call.getSource(), call.getDestination()});
 		}
 	}
 
@@ -83,11 +91,15 @@ public class EventManager {
 		for (Call call : getCalls(systemId)) {
 				call.fail(userName, reason);
 				em.persist(call);
+				logger.debug("call fail: {}->{}->{} - {}",
+					new Object[] {call.getSource(), call.getDestination(), userName, reason});
 			}
 		}
 
 	public void count(String fifo, int members, int activeMembers, int callers, int bridges) {
 		Counter counter = new Counter(fifo, members, activeMembers, callers, bridges);
 		em.persist(counter);
+		logger.debug("counter: {} - {},{},{},{}",
+			new Object[] {fifo, members, activeMembers, callers, bridges});
 	}
 }

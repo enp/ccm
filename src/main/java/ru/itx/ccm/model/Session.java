@@ -66,4 +66,7 @@ public class Session implements Serializable {
 		return "Session { "+id+" : "+ systemId +" : "+ userName +" }";
 	}
 
+	public String getUserName() {
+		return userName;
+	}
 }

@@ -100,4 +100,12 @@ public class Call implements Serializable {
 	public String toString() {
 		return "Call { "+id+" : "+ systemId +" : "+ userName +" }";
 	}
+
+	public String getDestination() {
+		return destination;
+	}
+
+	public String getSource() {
+		return source;
+	}
 }
