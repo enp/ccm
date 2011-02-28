@@ -109,11 +109,11 @@ public class EventListener {
 				}
 			}
 			public void backgroundJobResultReceived(EslEvent event) {
-				String eventBody = "";
+				StringBuilder eventBody = new StringBuilder("");
 				for (String eventBodyLine : event.getEventBodyLines())
-					eventBody += eventBodyLine;
+					eventBody.append(eventBodyLine);
 				try {
-					Document document = DocumentHelper.parseText(eventBody);
+					Document document = DocumentHelper.parseText(eventBody.toString());
 					String command =
 						event.getEventHeaders().get("Job-Command")+" "+
 						event.getEventHeaders().get("Job-Command-Arg");
