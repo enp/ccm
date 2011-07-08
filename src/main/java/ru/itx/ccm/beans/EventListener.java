@@ -18,8 +18,6 @@ package ru.itx.ccm.beans;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Node;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 import org.freeswitch.esl.client.IEslEventListener;
 import org.freeswitch.esl.client.inbound.Client;
 import org.freeswitch.esl.client.transport.event.EslEvent;
@@ -41,6 +39,7 @@ public class EventListener {
 	private int port;
 	private String password;
 	private String domain;
+	private String profile;
 
 	public void setHost(String host) {
 		this.host = host;
@@ -56,6 +55,10 @@ public class EventListener {
 
 	public void setDomain(String domain) {
 		this.domain = domain;
+	}
+
+	public void setProfile(String profile) {
+		this.profile = profile;
 	}
 
 	public void setEventManager(EventManager eventManager) {
@@ -75,10 +78,10 @@ public class EventListener {
 							headers.get("from-user"),
 							headers.get("user-agent"),
 							headers.get("network-ip"));
-						client.sendAsyncApiCommand("sofia", "xmlstatus profile stc");
+						client.sendAsyncApiCommand("sofia", "xmlstatus profile "+profile);
 					} else if (subclass.equals("sofia::unregister")) {
 						eventManager.disconnectSession(headers.get("call-id"));
-						client.sendAsyncApiCommand("sofia", "xmlstatus profile stc");
+						client.sendAsyncApiCommand("sofia", "xmlstatus profile "+profile);
 					}else if (subclass.contains("fifo::")) {
 						String action = event.getEventHeaders().get("FIFO-Action");
 						if (action.equals("push")) {
@@ -117,7 +120,7 @@ public class EventListener {
 					String command =
 						event.getEventHeaders().get("Job-Command")+" "+
 						event.getEventHeaders().get("Job-Command-Arg");
-					if (command.equals("sofia xmlstatus profile stc"))
+					if (command.equals("sofia xmlstatus profile "+profile))
 						processPresence(document);
 					if (command.startsWith("fifo list_verbose"))
 						processFifo(document);
@@ -127,7 +130,7 @@ public class EventListener {
 			}
 		});
 		client.connect(host, port, password, 2);
-		client.sendAsyncApiCommand("sofia", "xmlstatus profile stc");
+		client.sendAsyncApiCommand("sofia", "xmlstatus profile "+profile);
 		client.setEventSubscriptions("plain", "all");
 	}
 

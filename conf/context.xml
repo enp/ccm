@@ -39,6 +39,7 @@
 		<property name="port" value="8021"/>
 		<property name="password" value="ClueCon"/>
 		<property name="domain" value="10.161.50.100"/>
+		<property name="profile" value="stc"/>
 	</bean>
 
 </beans>

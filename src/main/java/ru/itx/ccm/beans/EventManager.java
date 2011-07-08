@@ -67,7 +67,7 @@ public class EventManager {
 		for (Call call : getCalls(systemId)) {
 			call.answer(userName);
 			em.persist(call);
-			logger.debug("call aswer: {}->{}->{}", new Object[] {call.getSource(), call.getDestination(), userName});
+			logger.debug("call answer: {}->{}->{}", new Object[] {call.getSource(), call.getDestination(), userName});
 		}
 	}
 
