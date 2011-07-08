@@ -18,12 +18,17 @@ package ru.itx.ccm.beans;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Node;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 import org.freeswitch.esl.client.IEslEventListener;
 import org.freeswitch.esl.client.inbound.Client;
 import org.freeswitch.esl.client.transport.event.EslEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +45,7 @@ public class EventListener {
 	private String password;
 	private String domain;
 	private String profile;
+	private String jobsDirectory;
 
 	public void setHost(String host) {
 		this.host = host;
@@ -61,6 +67,12 @@ public class EventListener {
 		this.profile = profile;
 	}
 
+	public void setJobsDirectory(String jobsDirectory) {
+		this.jobsDirectory = jobsDirectory;
+		if (jobsDirectory != null && !jobsDirectory.isEmpty())
+			new File(jobsDirectory).mkdir();
+	}
+
 	public void setEventManager(EventManager eventManager) {
 		this.eventManager = eventManager;
 	}
@@ -70,7 +82,7 @@ public class EventListener {
 		client.addEventListener(new IEslEventListener() {
 			public void eventReceived(EslEvent event) {
 				if (event.getEventName().equals("CUSTOM")) {
-					Map<String,String> headers = event.getEventHeaders();
+					Map<String, String> headers = event.getEventHeaders();
 					String subclass = headers.get("Event-Subclass");
 					if (subclass.equals("sofia::register")) {
 						eventManager.connectSession(
@@ -78,11 +90,11 @@ public class EventListener {
 							headers.get("from-user"),
 							headers.get("user-agent"),
 							headers.get("network-ip"));
-						client.sendAsyncApiCommand("sofia", "xmlstatus profile "+profile);
+						client.sendAsyncApiCommand("sofia", "xmlstatus profile " + profile);
 					} else if (subclass.equals("sofia::unregister")) {
 						eventManager.disconnectSession(headers.get("call-id"));
-						client.sendAsyncApiCommand("sofia", "xmlstatus profile "+profile);
-					}else if (subclass.contains("fifo::")) {
+						client.sendAsyncApiCommand("sofia", "xmlstatus profile " + profile);
+					} else if (subclass.contains("fifo::")) {
 						String action = event.getEventHeaders().get("FIFO-Action");
 						if (action.equals("push")) {
 							eventManager.connectCall(
@@ -90,18 +102,18 @@ public class EventListener {
 								headers.get("Caller-Caller-ID-Number"),
 								headers.get("Caller-RDNIS"),
 								headers.get("FIFO-Name"));
-							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+							client.sendAsyncApiCommand("fifo", "list_verbose " + headers.get("FIFO-Name"));
 						} else if (action.equals("bridge-caller-start")) {
 							eventManager.answerCall(
 								headers.get("Unique-ID"),
 								headers.get("Other-Leg-Callee-ID-Name"));
-							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+							client.sendAsyncApiCommand("fifo", "list_verbose " + headers.get("FIFO-Name"));
 						} else if (action.equals("bridge-caller-stop")) {
 							eventManager.hangupCall(headers.get("Unique-ID"));
-							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+							client.sendAsyncApiCommand("fifo", "list_verbose " + headers.get("FIFO-Name"));
 						} else if (action.equals("abort")) {
 							eventManager.abortCall(headers.get("Unique-ID"));
-							client.sendAsyncApiCommand("fifo", "list_verbose "+headers.get("FIFO-Name"));
+							client.sendAsyncApiCommand("fifo", "list_verbose " + headers.get("FIFO-Name"));
 						} else if (action.equals("post-dial") && !headers.get("result").equals("success")) {
 							eventManager.failCall(
 								headers.get("caller-uuid"),
@@ -111,6 +123,7 @@ public class EventListener {
 					}
 				}
 			}
+
 			public void backgroundJobResultReceived(EslEvent event) {
 				StringBuilder eventBody = new StringBuilder("");
 				for (String eventBodyLine : event.getEventBodyLines())
@@ -118,9 +131,18 @@ public class EventListener {
 				try {
 					Document document = DocumentHelper.parseText(eventBody.toString());
 					String command =
-						event.getEventHeaders().get("Job-Command")+" "+
+						event.getEventHeaders().get("Job-Command") + " " +
 						event.getEventHeaders().get("Job-Command-Arg");
-					if (command.equals("sofia xmlstatus profile "+profile))
+					if (jobsDirectory != null && !jobsDirectory.isEmpty()) {
+						new File(jobsDirectory+"/"+command).mkdir();
+						OutputFormat format = OutputFormat.createPrettyPrint();
+						Writer writer = new FileWriter(
+							jobsDirectory+"/"+command+"/"+event.getEventHeaders().get("Job-UUID")+".xml");
+						XMLWriter xmlWriter = new XMLWriter(writer, format);
+						xmlWriter.write(document);
+						xmlWriter.close();
+					}
+					if (command.equals("sofia xmlstatus profile " + profile))
 						processPresence(document);
 					if (command.startsWith("fifo list_verbose"))
 						processFifo(document);
@@ -130,7 +152,7 @@ public class EventListener {
 			}
 		});
 		client.connect(host, port, password, 2);
-		client.sendAsyncApiCommand("sofia", "xmlstatus profile "+profile);
+		client.sendAsyncApiCommand("sofia", "xmlstatus profile " + profile);
 		client.setEventSubscriptions("plain", "all");
 	}
 
