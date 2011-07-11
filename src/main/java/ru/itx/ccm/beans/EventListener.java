@@ -28,8 +28,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +40,7 @@ public class EventListener {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private EventManager eventManager;
 	private Client client = new Client();
-	private List<String> users = new ArrayList<String>();
+	private Map<String,String> users = new HashMap<String,String>();
 
 	private String host;
 	private int port;
@@ -46,6 +48,7 @@ public class EventListener {
 	private String domain;
 	private String profile;
 	private String jobsDirectory;
+	private String fifoDirectory;
 
 	public void setHost(String host) {
 		this.host = host;
@@ -69,6 +72,15 @@ public class EventListener {
 
 	public void setJobsDirectory(String jobsDirectory) {
 		this.jobsDirectory = jobsDirectory;
+		createDirectory(jobsDirectory);
+	}
+
+	public void setFifoDirectory(String fifoDirectory) {
+		this.fifoDirectory = fifoDirectory;
+		createDirectory(fifoDirectory);
+	}
+
+	private void createDirectory(String jobsDirectory) {
 		if (jobsDirectory != null && !jobsDirectory.isEmpty())
 			new File(jobsDirectory).mkdir();
 	}
@@ -158,21 +170,49 @@ public class EventListener {
 
 	private void processPresence(Document document) {
 		users.clear();
-		for(Node node : (List<Node>)document.selectNodes("/profile/registrations/registration/user"))
-			users.add(node.getText());
+		for(Node node : (List<Node>)document.selectNodes("/profile/registrations/registration")) {
+			String userName = node.valueOf("user").replace("@"+domain,"");
+			String userStatus = node.valueOf("agent")+" "+node.valueOf("status").replace("(unknown)","");
+			users.put(userName, userStatus);
+		}
 	}
 
-	private void processFifo(Document document) {
+	private void processFifo(Document document) throws Exception {
 		String fifo = document.selectSingleNode("/fifo_report/fifo").valueOf("@name");
 		List<Node> members = document.selectNodes("/fifo_report/fifo/outbound/member");
-		List<String> activeMembers = new ArrayList<String>();
-		for (Node node : members) {
-			String user = node.getText().replace("user/","");
-			if (users.contains(user))
-				activeMembers.add(user.replace("@"+domain,""));
-		}
 		List<Node> callers = document.selectNodes("/fifo_report/fifo/callers/caller");
 		List<Node> bridges = document.selectNodes("/fifo_report/fifo/bridges/bridge");
+		List<String> activeMembers = new ArrayList<String>();
+		List<String> connectedMembers = new ArrayList<String>();
+		if (fifoDirectory != null && !fifoDirectory.isEmpty()) {
+			FileWriter writer = new FileWriter(fifoDirectory+"/"+fifo+".status");
+			for (Node node : callers) {
+				writer.append(node.valueOf("@timestamp")+" ");
+				writer.append(String.format("%10s",node.valueOf("@caller_id_number"))+"\n");
+			}
+			for (Node node : bridges) {
+				String agent[] =
+					node.valueOf("consumer/cdr/callflow/caller_profile/originator/originator_caller_profile/chan_name")
+					.replace("sofia/"+profile+"/sip:","")
+					.replace(":5060","")
+					.split("@");
+				writer.append(node.valueOf("@bridge_start")+" ");
+				writer.append(String.format("%10s",node.valueOf("caller/@caller_id_number"))+" -> ");
+				writer.append(agent[0]+" "+((users.get(agent[0])==null)?(""):(users.get(agent[0])))+"\n");
+				connectedMembers.add(agent[0]);
+			}
+			for (Node node : members) {
+				String member = node.getText().replace("user/","").replace("@"+domain,"");
+				if (!connectedMembers.contains(member)) {
+					writer.append("                                  ");
+					writer.append(member+" "+((users.get(member)==null)?(""):(users.get(member)))+"\n");
+				}
+				if (users.containsKey(member))
+					activeMembers.add(member);
+			}
+			writer.append("\n");
+			writer.close();
+		}
 		eventManager.count(fifo, members.size(), activeMembers.size(), callers.size(), bridges.size());
 	}
 

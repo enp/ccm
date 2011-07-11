@@ -6,7 +6,8 @@
 		<file>log/master.log</file>
 		<append>true</append>
 		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} %-5level %thread %logger{36} %file:%line - %msg%n</pattern>
+			<!--<pattern>%d{HH:mm:ss.SSS} %-5level %thread %logger{36} %file:%line - %msg%n</pattern>-->
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</pattern>
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
 			<maxIndex>3</maxIndex>
@@ -19,7 +20,7 @@
 
 	<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} %-5level %thread %logger{36} %file:%line - %msg%n</pattern>
+			<pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %thread %logger{36} %file:%line - %msg%n</pattern>
 		</encoder>
 	</appender>
 

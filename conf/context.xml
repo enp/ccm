@@ -34,13 +34,14 @@
 	<bean id="eventManager" class="ru.itx.ccm.beans.EventManager"/>
 
 	<bean id="bean" class="ru.itx.ccm.beans.EventListener" init-method="init" destroy-method="destroy">
-		<property name="eventManager" ref="eventManager"/>
 		<property name="host" value="pbx"/>
 		<property name="port" value="8021"/>
 		<property name="password" value="ClueCon"/>
 		<property name="domain" value="10.161.50.100"/>
 		<property name="profile" value="stc"/>
-		<property name="jobsDirectory" value="jobs"/>
+		<!--<property name="jobsDirectory" value="jobs"/>-->
+		<property name="fifoDirectory" value="fifo"/>
+		<property name="eventManager" ref="eventManager"/>
 	</bean>
 
 </beans>
