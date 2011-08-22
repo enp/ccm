@@ -118,7 +118,7 @@ public class EventListener {
 						} else if (action.equals("bridge-caller-start")) {
 							eventManager.answerCall(
 								headers.get("Unique-ID"),
-								headers.get("Other-Leg-Callee-ID-Name"));
+								headers.get("Other-Leg-Caller-ID-Number"));
 							client.sendAsyncApiCommand("fifo", "list_verbose " + headers.get("FIFO-Name"));
 						} else if (action.equals("bridge-caller-stop")) {
 							eventManager.hangupCall(headers.get("Unique-ID"));
